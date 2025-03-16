@@ -9,7 +9,7 @@ const fz = zigbeeHerdsmanConverters.fromZigbeeConverters || zigbeeHerdsmanConver
 const tz = zigbeeHerdsmanConverters.toZigbeeConverters || zigbeeHerdsmanConverters.toZigbee;
 
 const ptvo_switch = (zigbeeHerdsmanConverters.findByModel)?zigbeeHerdsmanConverters.findByModel('ptvo.switch'):zigbeeHerdsmanConverters.findByDevice({modelID: 'ptvo.switch'});
-fz.legacy = ptvo_switch.meta.tuyaThermostatPreset;
+
 fz.ptvo_on_off = {
   cluster: 'genOnOff',
   type: ['attributeReport', 'readResponse'],
