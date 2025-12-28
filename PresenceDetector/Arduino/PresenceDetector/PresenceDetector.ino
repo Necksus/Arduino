@@ -19,6 +19,7 @@ https://fixtse.com/blog/mini-mmwave-sensor
 #include "LD2450Wrapper.h"
 #include "ZigbeeWrapper.h"
 
+ZigbeeWrapper m_zigbee;
 
 void setup() {
   // put your setup code here, to run once:
@@ -27,7 +28,7 @@ void setup() {
   Serial.println("ESP32H2 starting up.....");
 #endif
 
-  ConfigureZigbee();
+  m_zigbee.Setup();
   ConfigureLD2450();
 }
 
@@ -35,4 +36,5 @@ void setup() {
 void loop()
 {
   ProcessLD2450();
+//  m_zigbee.Update();
 }
