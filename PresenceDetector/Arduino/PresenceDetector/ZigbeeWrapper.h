@@ -7,16 +7,16 @@
 class ZigbeeTarget
 {
   public:
-    ZigbeeTarget(uint8_t number);
+    ZigbeeTarget(uint8_t targetId);
     
     void Setup();
-    void Init();
+    void Update(bool isValid, int16_t x, int16_t y);
 
   private:
-    uint8_t m_number;
-    ZigbeeBinary m_IsValid;
-    ZigbeeAnalog m_X;
-    ZigbeeAnalog m_Y;
+    uint8_t m_targetId;
+    ZigbeeBinary m_isValid;
+    ZigbeeAnalog m_x;
+    ZigbeeAnalog m_y;    
 };
 
 
@@ -26,13 +26,16 @@ class ZigbeeWrapper
     ZigbeeWrapper();
 
     void Setup();
-    void Update();
+    void UpdateTarget(uint8_t targetId, bool isValid, int16_t x, int16_t y);
+    void UpdateOccupancy(bool occupancy);
 
   private:
     ZigbeeOccupancySensor m_occupancy;
     ZigbeeTarget m_target1;
     ZigbeeTarget m_target2;
     ZigbeeTarget m_target3;
+
+    ZigbeeTarget* GetTarget(uint8_t targetId);
 };
 
 #endif

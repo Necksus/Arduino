@@ -11,41 +11,45 @@
 #define TARGET_ENDPOINT_NUMBER   3
 
 
-ZigbeeTarget::ZigbeeTarget(uint8_t number)
-  : m_IsValid(TARGET_ENDPOINT_NUMBER * (number-1) + 2)
-  , m_X(TARGET_ENDPOINT_NUMBER * (number-1) + 3)
-  , m_Y(TARGET_ENDPOINT_NUMBER * (number-1) + 4)
+ZigbeeTarget::ZigbeeTarget(uint8_t targetId)
+  : m_isValid(TARGET_ENDPOINT_NUMBER * (targetId-1) + 2)
+  , m_x(TARGET_ENDPOINT_NUMBER * (targetId-1) + 3)
+  , m_y(TARGET_ENDPOINT_NUMBER * (targetId-1) + 4)
 {
-  m_number = number;
+  m_targetId = targetId;
 }
 
 void ZigbeeTarget::Setup()
 {
   char  buffer[120];
 
-  sprintf(buffer, "Target %d is valid", m_number);
-  m_IsValid.addBinaryInput();
-  m_IsValid.setBinaryInputApplication(BINARY_INPUT_APPLICATION_TYPE_HVAC_OCCUPANCY);
-  m_IsValid.setBinaryInputDescription(buffer);
-  Zigbee.addEndpoint(&m_IsValid);
+  sprintf(buffer, "Target %d is valid", m_targetId);
+  m_isValid.addBinaryInput();
+  m_isValid.setBinaryInputApplication(BINARY_INPUT_APPLICATION_TYPE_HVAC_OCCUPANCY);
+  m_isValid.setBinaryInputDescription(buffer);
+  Zigbee.addEndpoint(&m_isValid);
 
-  sprintf(buffer, "Target %d X (millimeter)", m_number);
-  m_X.addAnalogInput();
-  m_X.setAnalogInputDescription(buffer);
-  m_X.setAnalogInputMinMax(-MAX_DISTANCE_IN_MM, MAX_DISTANCE_IN_MM);
-  Zigbee.addEndpoint(&m_X);
+  sprintf(buffer, "Target %d X (millimeter)", m_targetId);
+  m_x.addAnalogInput();
+  m_x.setAnalogInputDescription(buffer);
+  m_x.setAnalogInputMinMax(-MAX_DISTANCE_IN_MM, MAX_DISTANCE_IN_MM);
+  Zigbee.addEndpoint(&m_x);
 
-  sprintf(buffer, "Target %d Y (millimeter)", m_number);
-  m_Y.addAnalogInput();
-  m_Y.setAnalogInputDescription(buffer);
-  m_Y.setAnalogInputMinMax(0, MAX_DISTANCE_IN_MM);
-  Zigbee.addEndpoint(&m_Y);
+  sprintf(buffer, "Target %d Y (millimeter)", m_targetId);
+  m_y.addAnalogInput();
+  m_y.setAnalogInputDescription(buffer);
+  m_y.setAnalogInputMinMax(0, MAX_DISTANCE_IN_MM);
+  Zigbee.addEndpoint(&m_y);
 }
 
-void ZigbeeTarget::Init()
+void ZigbeeTarget::Update(bool isValid, int16_t x, int16_t y)
 {
-  m_X.setAnalogInput(10*m_number);
-  m_Y.setAnalogInput(20*m_number);
+  m_isValid.setBinaryInput(isValid);
+  m_isValid.reportBinaryInput();
+  m_x.setAnalogInput(x);
+  m_x.reportAnalogInput();
+  m_y.setAnalogInput(y);
+  m_y.reportAnalogInput();
 }
 
 ZigbeeWrapper::ZigbeeWrapper()
@@ -60,7 +64,6 @@ void ZigbeeWrapper::Setup()
 {  
   m_occupancy.setManufacturerAndModel(ZIGBEE_MANUFACTURER, ZIGBEE_MODEL);
   Zigbee.addEndpoint(&m_occupancy);
-
 
   m_target1.Setup();
   m_target2.Setup();
@@ -85,6 +88,34 @@ void ZigbeeWrapper::Setup()
   Serial.println("Zigbee is connected");
 }
 
-void ZigbeeWrapper::Update()
+void ZigbeeWrapper::UpdateTarget(uint8_t targetId, bool isValid, int16_t x, int16_t y)
 {
+  auto target = GetTarget(targetId);
+
+  if (target != NULL)
+  {
+    log_d("Target: %d, IsValid: %d, X: %d, Y: %d", targetId, isValid, x, y);
+    target->Update(isValid, x, y);
+  }
+}
+
+void ZigbeeWrapper::UpdateOccupancy(bool occupancy)
+{
+  m_occupancy.setOccupancy(occupancy);
+  m_occupancy.report();
+}
+
+ZigbeeTarget* ZigbeeWrapper::GetTarget(uint8_t targetId)
+{
+  switch(targetId)
+  {
+    case 0 :
+      return &m_target1;
+    case 1 :
+      return &m_target2;
+    case 3 :
+      return &m_target3;
+    default :
+      return NULL;
+  }
 }

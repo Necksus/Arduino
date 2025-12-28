@@ -20,6 +20,7 @@ https://fixtse.com/blog/mini-mmwave-sensor
 #include "ZigbeeWrapper.h"
 
 ZigbeeWrapper m_zigbee;
+LD2450Wrapper m_ld2450;
 
 void setup() {
   // put your setup code here, to run once:
@@ -29,12 +30,26 @@ void setup() {
 #endif
 
   m_zigbee.Setup();
-  ConfigureLD2450();
+  m_ld2450.Setup();
 }
 
 
 void loop()
 {
-  ProcessLD2450();
-//  m_zigbee.Update();
+  if (m_ld2450.HasUpdate())
+  {
+    bool occupancy = false;
+
+    for (uint8_t targetId = 0; targetId < 3; targetId++)
+    {
+      auto target = m_ld2450.GetTarget(targetId);
+      m_zigbee.UpdateTarget(targetId, target.isValid(), target.x, target.y);
+      if (target.isValid())
+      {
+        occupancy = true;
+      }
+    }
+    m_zigbee.UpdateOccupancy(occupancy);
+    delay(1000);
+  }
 }

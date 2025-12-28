@@ -1,57 +1,59 @@
 
-#include <LD2450.hpp>   // https://github.com/Fiooodooor/HLK-LD245X/tree/main
-#include <HardwareSerial.h>
-
 #include "LD2450Wrapper.h"
 
-using namespace esphome::ld245x;
-HardwareSerial ld2450Serial(1);
-LD2450 ld2450;
+#define SERIAL_PORT     1
 
-void ConfigureLD2450()
+LD2450Wrapper::LD2450Wrapper()
+  : m_Serial(SERIAL_PORT)
 {
-  Serial.begin(115200);
-  ld2450Serial.begin(LD2450_SERIAL_SPEED, SERIAL_8N1, RX_PIN, TX_PIN);
-  ld2450Serial.setTimeout(1000);
+}
 
-  Serial.println("LD2450, HardwareSerial(1) waiting for sensor data...\n");
-  ld2450.begin(ld2450Serial, true);  
+void LD2450Wrapper::Setup()
+{
+  m_Serial.begin(LD2450_SERIAL_SPEED, SERIAL_8N1, RX_PIN, TX_PIN);
+  m_Serial.setTimeout(1000);
 
-  ld2450.beginConfigurationSession();
-  ld2450.setMultiTargetTracking();
-  ld2450.queryTargetTrackingMode();
-  ld2450.queryFirmwareVersion();
-  ld2450.queryMacAddress();
-  ld2450.queryZoneFilter();
-  bool configOk = ld2450.endConfigurationSession();
+  log_d("LD2450, HardwareSerial(1) waiting for sensor data...\n");
+  m_ld2450.begin(m_Serial, true);  
+
+  m_ld2450.beginConfigurationSession();
+  m_ld2450.setMultiTargetTracking();
+  m_ld2450.queryTargetTrackingMode();
+  m_ld2450.queryFirmwareVersion();
+  m_ld2450.queryMacAddress();
+  m_ld2450.queryZoneFilter();
+  bool configOk = m_ld2450.endConfigurationSession();
   if (configOk)
   {
-    Serial.print("Sensor name: ");
-    Serial.println(ld2450.getNameString());
-
-    Serial.print("Zone filter: ");
-    Serial.println(ld2450.getZoneFilter());
-
-    Serial.print("Firmware value: ");
-    Serial.println(ld2450.getFirmwareString());
-
-    Serial.print("MacAddress value: ");
-    Serial.println(ld2450.getMacAddressString());
+    log_d("Sensor name: %s", m_ld2450.getNameString());
+    log_d("Zone filter: %s", m_ld2450.getZoneFilter());
+    log_d("Firmware value: %s", m_ld2450.getFirmwareString());
+    log_d("MacAddress value: %s", m_ld2450.getMacAddressString());
   }
   else
   {
-    Serial.println("Cannot configure LD2450");
+    log_d("Cannot configure LD2450");
   }
 }
 
-
-void ProcessLD2450()
+bool LD2450Wrapper::HasUpdate()
 {
-  if (ld2450.update())
+  return m_ld2450.update();
+}
+
+RadarTarget LD2450Wrapper::GetTarget(uint8_t targetId)
+{
+  return m_ld2450.getTarget(targetId);
+}
+
+/*
+void LD2450Wrapper::ProcessLD2450()
+{
+  if (m_ld2450.update())
   {
-    auto target1 = ld2450.getTarget(0);
-    auto target2 = ld2450.getTarget(1);
-    auto target3 = ld2450.getTarget(2);
+    auto target1 = m_ld2450.getTarget(0);
+    auto target2 = m_ld2450.getTarget(1);
+    auto target3 = m_ld2450.getTarget(2);
 
     char buffer[80];
     memset(buffer, 0, sizeof(buffer));
@@ -80,7 +82,8 @@ void ProcessLD2450()
 //      Serial.println(buffer);
 
     
-    //Serial.print(ld2450.getLastTargetMessage());
+    //Serial.print(m_ld2450.getLastTargetMessage());
     
   }
 }
+*/
